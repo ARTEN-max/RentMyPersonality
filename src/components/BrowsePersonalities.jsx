@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { auth } from '../firebase';
+import { useAuth } from '../contexts/AuthContext';
 import { getAllProfiles, getUserProfile } from '../services/userService';
 import { PERSONALITY_TYPES } from '../types/user';
 
@@ -106,6 +106,7 @@ function ContactModal({ profile, onClose }) {
 }
 
 export default function BrowsePersonalities() {
+  const { currentUser } = useAuth();
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -115,9 +116,9 @@ export default function BrowsePersonalities() {
   const [selectedPersonalityType, setSelectedPersonalityType] = useState('');
   const [onlyAvailable, setOnlyAvailable] = useState(false);
   const [maxHourlyRate, setMaxHourlyRate] = useState('');
-  const [sortBy, setSortBy] = useState('match'); // 'match', 'name' or 'price'
-  const [sortOrder, setSortOrder] = useState('desc'); // 'asc' or 'desc'
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [sortBy, setSortBy] = useState('match');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [viewMode, setViewMode] = useState('grid');
   const [selectedProfile, setSelectedProfile] = useState(null);
 
   useEffect(() => {
@@ -127,7 +128,6 @@ export default function BrowsePersonalities() {
 
   const loadUserPreferences = async () => {
     try {
-      const currentUser = auth.currentUser;
       if (currentUser) {
         const userProfile = await getUserProfile(currentUser.uid);
         setUserPreferences(userProfile);
@@ -140,14 +140,12 @@ export default function BrowsePersonalities() {
   const loadProfiles = async () => {
     try {
       setLoading(true);
-      const currentUser = auth.currentUser;
       if (!currentUser) {
         setError('Please log in to browse personalities');
         return;
       }
 
       const allProfiles = await getAllProfiles();
-      // Filter out current user's profile
       const otherProfiles = allProfiles.filter(profile => profile.id !== currentUser.uid);
       setProfiles(otherProfiles);
     } catch (err) {
@@ -158,29 +156,32 @@ export default function BrowsePersonalities() {
     }
   };
 
-  const calculateMatchScore = (profile) => {
-    if (!userPreferences?.personalityType || !profile.personalityType) {
-      return 0;
-    }
-    return PERSONALITY_MATCH_SCORES[userPreferences.personalityType][profile.personalityType] || 0;
+  const calculateMatchScore = (userType, profileType) => {
+    if (!userType || !profileType) return 0;
+    return PERSONALITY_MATCH_SCORES[userType]?.[profileType] || 0;
   };
 
-  const handleContact = (profile) => {
+  const handleViewModeChange = (mode) => {
+    setViewMode(mode);
+  };
+
+  const handleContactClick = (profile) => {
     setSelectedProfile(profile);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedProfile(null);
   };
 
   const filteredAndSortedProfiles = () => {
     return profiles
       .filter(profile => {
-        // Apply personality type filter
         if (selectedPersonalityType && profile.personalityType !== selectedPersonalityType) {
           return false;
         }
-        // Apply availability filter
         if (onlyAvailable && !profile.isAvailableForRent) {
           return false;
         }
-        // Apply hourly rate filter
         if (maxHourlyRate && profile.hourlyRate > parseFloat(maxHourlyRate)) {
           return false;
         }
@@ -188,105 +189,96 @@ export default function BrowsePersonalities() {
       })
       .map(profile => ({
         ...profile,
-        matchScore: calculateMatchScore(profile)
+        matchScore: calculateMatchScore(userPreferences?.personalityType, profile.personalityType)
       }))
       .sort((a, b) => {
         switch (sortBy) {
           case 'match':
-            return sortOrder === 'asc'
-              ? a.matchScore - b.matchScore
-              : b.matchScore - a.matchScore;
+            return sortOrder === 'asc' ? a.matchScore - b.matchScore : b.matchScore - a.matchScore;
           case 'name':
-            return sortOrder === 'asc'
-              ? a.displayName.localeCompare(b.displayName)
-              : b.displayName.localeCompare(a.displayName);
+            return sortOrder === 'asc' ? a.displayName.localeCompare(b.displayName) : b.displayName.localeCompare(a.displayName);
           case 'price':
-            return sortOrder === 'asc'
-              ? a.hourlyRate - b.hourlyRate
-              : b.hourlyRate - a.hourlyRate;
+            return sortOrder === 'asc' ? a.hourlyRate - b.hourlyRate : b.hourlyRate - a.hourlyRate;
           default:
             return 0;
         }
       });
   };
 
-  const ProfileCard = ({ profile }) => (
-    <div className="relative group">
-      <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-300"></div>
-      <div className="clip-hex bg-gray-900 backdrop-blur-lg shadow-lg relative transform transition-all duration-300 group-hover:scale-[1.02] border border-cyan-500/20">
-        <div className="hex-content">
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-[120px,1fr] gap-4 h-full">
-            {/* Left Column - Photo and Match Score */}
-            <div className="flex flex-col items-center gap-2">
-              <div className="relative">
-                {profile.photoURL ? (
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-cyan-500 rounded-full blur-sm opacity-50"></div>
-                    <img
-                      src={profile.photoURL}
-                      alt={profile.displayName}
-                      className="relative h-20 w-20 rounded-full object-cover ring-2 ring-cyan-500 z-10"
-                    />
-                  </div>
-                ) : (
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-cyan-500 rounded-full blur-sm opacity-50"></div>
-                    <div className="relative h-20 w-20 rounded-full bg-gray-800 flex items-center justify-center ring-2 ring-cyan-500 z-10">
-                      <span className="text-3xl font-bold text-cyan-400">
-                        {profile.displayName?.[0]?.toUpperCase() || '?'}
-                      </span>
-                    </div>
-                  </div>
-                )}
-                <div className="absolute -bottom-1 -right-1 h-7 w-7 bg-gray-900 rounded-full border-2 border-cyan-500 flex items-center justify-center">
-                  <span className="text-xs font-bold text-cyan-400">{Math.round(profile.matchScore * 100)}%</span>
+  const ProfileCard = ({ profile }) => {
+    const { currentUser } = useAuth();
+    const matchScore = calculateMatchScore(currentUser?.personalityType, profile.personalityType);
+
+    return (
+      <div className="group relative bg-gray-800 rounded-lg overflow-hidden border border-gray-700 hover:border-cyan-500/50 transition-all duration-300">
+        <div className="p-6">
+          <div className="flex items-start gap-4">
+            {/* Profile Picture Container */}
+            <div className="relative flex-shrink-0">
+              {/* Profile Picture */}
+              {profile.photoURL ? (
+                <div className="relative w-16 h-16">
+                  <div className="absolute inset-0 bg-cyan-500 rounded-full blur opacity-25"></div>
+                  <img
+                    src={profile.photoURL}
+                    alt={profile.displayName}
+                    className="relative w-16 h-16 rounded-full object-cover ring-2 ring-cyan-500/50"
+                  />
                 </div>
-              </div>
-
-              <div className={`px-3 py-1 rounded-full text-xs font-medium w-full text-center ${
-                profile.isAvailableForRent
-                  ? 'bg-green-900/70 text-green-300 border border-green-400/50'
-                  : 'bg-red-900/70 text-red-300 border border-red-400/50'
-              }`}>
-                {profile.isAvailableForRent ? 'Available' : 'Unavailable'}
-              </div>
-
-              <div className="bg-gray-800/80 px-3 py-2 rounded-lg border border-cyan-500/30 text-center w-full">
-                <span className="text-xs text-gray-300">Rate</span>
-                <p className="text-lg font-bold text-cyan-400">${profile.hourlyRate}/hr</p>
+              ) : (
+                <div className="relative w-16 h-16">
+                  <div className="absolute inset-0 bg-cyan-500 rounded-full blur opacity-25"></div>
+                  <div className="relative w-16 h-16 rounded-full bg-gray-800 flex items-center justify-center ring-2 ring-cyan-500/50">
+                    <span className="text-2xl font-bold text-cyan-400">
+                      {profile.displayName?.[0]?.toUpperCase() || '?'}
+                    </span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Match Score Badge */}
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gray-900 rounded-full ring-2 ring-cyan-500 flex items-center justify-center">
+                <span className="text-xs font-bold text-cyan-400">{Math.round(matchScore * 100)}%</span>
               </div>
             </div>
 
-            {/* Right Column - User Info */}
-            <div className="flex flex-col h-full">
-              <div>
-                <h3 className="text-xl font-bold bg-gradient-to-r from-cyan-300 to-purple-300 bg-clip-text text-transparent">
+            {/* User Info */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold bg-gradient-to-r from-cyan-300 to-purple-300 bg-clip-text text-transparent truncate">
                   {profile.displayName}
                 </h3>
-                <div className="flex items-center gap-2 mt-1 mb-2">
-                  <span className="px-2 py-1 rounded-md bg-cyan-900/50 border border-cyan-500/50 text-cyan-300 text-sm">
-                    {profile.personalityType}
-                  </span>
-                  {profile.instagramHandle && (
-                    <span className="text-sm text-gray-300">@{profile.instagramHandle}</span>
-                  )}
-                </div>
-                <div className="bg-gray-800/50 rounded-lg p-3 border border-gray-700/50 mb-3">
-                  <p className="text-gray-300 line-clamp-2 text-sm">{profile.bio}</p>
+                <div className="flex-shrink-0 bg-gray-800/80 px-2 py-1 rounded-lg border border-cyan-500/30">
+                  <span className="text-lg font-bold text-cyan-400">${profile.hourlyRate}/hr</span>
                 </div>
               </div>
-
-              <div className="mt-auto flex items-center justify-between">
-                {profile.email && (
-                  <div className="text-sm text-gray-300 truncate max-w-[60%]">
-                    {profile.email}
-                  </div>
+              
+              <div className="flex items-center gap-2 mt-2">
+                <span className="px-2 py-1 rounded-md bg-cyan-900/50 border border-cyan-500/50 text-cyan-300 text-sm">
+                  {profile.personalityType}
+                </span>
+                {profile.instagramHandle && (
+                  <span className="text-sm text-gray-300">@{profile.instagramHandle}</span>
                 )}
+              </div>
+
+              <div className="mt-3 bg-gray-800/50 rounded-lg p-3 border border-gray-700/50">
+                <p className="text-gray-300 line-clamp-2 text-sm">{profile.bio}</p>
+              </div>
+
+              <div className="mt-4 flex items-center justify-between">
+                <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  profile.isAvailableForRent
+                    ? 'bg-green-900/70 text-green-300 border border-green-400/50'
+                    : 'bg-red-900/70 text-red-300 border border-red-400/50'
+                }`}>
+                  {profile.isAvailableForRent ? 'Available' : 'Unavailable'}
+                </div>
+
                 <button
-                  onClick={() => handleContact(profile)}
+                  onClick={() => handleContactClick(profile)}
                   disabled={!profile.isAvailableForRent}
-                  className={`relative px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 ml-auto ${
+                  className={`relative px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
                     profile.isAvailableForRent
                       ? 'bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 text-white shadow-lg hover:shadow-cyan-500/25'
                       : 'bg-gray-800 text-gray-400 cursor-not-allowed'
@@ -302,8 +294,8 @@ export default function BrowsePersonalities() {
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const ProfileListItem = ({ profile }) => (
     <div className="bg-white rounded-lg shadow p-4 flex items-center justify-between">
@@ -341,7 +333,7 @@ export default function BrowsePersonalities() {
           {profile.isAvailableForRent ? 'Available' : 'Unavailable'}
         </div>
         <button
-          onClick={() => handleContact(profile)}
+          onClick={() => handleContactClick(profile)}
           disabled={!profile.isAvailableForRent}
           className={`px-4 py-2 rounded-lg text-sm font-medium ${
             profile.isAvailableForRent
@@ -358,7 +350,7 @@ export default function BrowsePersonalities() {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500"></div>
       </div>
     );
   }
@@ -372,7 +364,7 @@ export default function BrowsePersonalities() {
           </h1>
           <div className="flex items-center space-x-2 bg-gray-800/50 backdrop-blur-sm rounded-lg p-1">
             <button
-              onClick={() => setViewMode('grid')}
+              onClick={() => handleViewModeChange('grid')}
               className={`px-4 py-2 rounded-md transition-all duration-300 ${
                 viewMode === 'grid'
                   ? 'bg-cyan-900/50 text-cyan-400 shadow-lg shadow-cyan-500/20'
@@ -382,7 +374,7 @@ export default function BrowsePersonalities() {
               Grid
             </button>
             <button
-              onClick={() => setViewMode('list')}
+              onClick={() => handleViewModeChange('list')}
               className={`px-4 py-2 rounded-md transition-all duration-300 ${
                 viewMode === 'list'
                   ? 'bg-cyan-900/50 text-cyan-400 shadow-lg shadow-cyan-500/20'
@@ -506,7 +498,7 @@ export default function BrowsePersonalities() {
         {selectedProfile && (
           <ContactModal
             profile={selectedProfile}
-            onClose={() => setSelectedProfile(null)}
+            onClose={handleCloseModal}
           />
         )}
       </div>

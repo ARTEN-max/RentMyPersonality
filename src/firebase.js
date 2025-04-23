@@ -4,53 +4,35 @@ import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth"
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
-// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBsOwFKjZEvqgO60OHEPUjX0X12AT1Z_lg",
-  authDomain: "rentmypersonality.firebaseapp.com",
-  projectId: "rentmypersonality",
-  storageBucket: "rentmypersonality.firebasestorage.app",
-  messagingSenderId: "412475846903",
-  appId: "1:412475846903:web:337c487fcd75c04474e3f2"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-let app;
-let auth;
-let db;
-let storage;
+// Initialize Firebase
+console.log('Initializing Firebase with config:', {
+  apiKey: firebaseConfig.apiKey,
+  authDomain: firebaseConfig.authDomain,
+  projectId: firebaseConfig.projectId
+});
 
-try {
-  // Initialize Firebase
-  console.log('Initializing Firebase...');
-  app = initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
-  // Initialize Firebase Authentication
-  console.log('Initializing Firebase Auth...');
-  auth = getAuth(app);
-
-  // Set persistence to LOCAL
-  console.log('Setting auth persistence...');
-  setPersistence(auth, browserLocalPersistence)
-    .then(() => {
-      console.log('Auth persistence set to LOCAL');
-    })
-    .catch((error) => {
-      console.error('Error setting auth persistence:', error);
-    });
-
-  // Initialize Firestore
-  console.log('Initializing Firestore...');
-  db = getFirestore(app);
-
-  // Initialize Storage
-  console.log('Initializing Firebase Storage...');
-  storage = getStorage(app);
-
-  console.log('Firebase initialization complete');
-} catch (error) {
-  console.error('Error initializing Firebase:', error);
-  throw error;
-}
+// Set persistence to LOCAL
+setPersistence(auth, browserLocalPersistence)
+  .then(() => {
+    console.log('Auth persistence set to LOCAL');
+  })
+  .catch((error) => {
+    console.error('Error setting auth persistence:', error);
+  });
 
 // Log the auth configuration for debugging
 console.log("Firebase Auth Configuration:", {
@@ -60,3 +42,4 @@ console.log("Firebase Auth Configuration:", {
 });
 
 export { auth, db, storage };
+export default app;
