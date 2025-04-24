@@ -9,6 +9,7 @@ import Login from './components/Login';
 import Register from './components/Register';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
+import { MatchProvider } from './contexts/MatchContext';
 import './App.css';
 
 function App() {
@@ -16,16 +17,18 @@ function App() {
     <Router>
       <AuthProvider>
         <ToastProvider>
-          <div className="app">
-            <Navigation />
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/browse" element={<BrowsePersonalities />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-            </Routes>
-          </div>
+          <MatchProvider>
+            <div className="app">
+              <Navigation />
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/browse" element={<BrowsePersonalities />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+              </Routes>
+            </div>
+          </MatchProvider>
         </ToastProvider>
       </AuthProvider>
     </Router>

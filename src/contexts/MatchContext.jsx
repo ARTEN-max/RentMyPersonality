@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
+import { useToast } from './ToastContext';
 import { db } from '../firebase';
 import { collection, addDoc, query, where, getDocs, onSnapshot } from 'firebase/firestore';
-import { toast } from 'react-hot-toast';
 
 const MatchContext = createContext();
 
@@ -12,6 +12,7 @@ export function useMatch() {
 
 export function MatchProvider({ children }) {
   const { currentUser } = useAuth();
+  const { addToast } = useToast();
   const [matches, setMatches] = useState([]);
 
   // Calculate compatibility score between two users
@@ -79,15 +80,15 @@ export function MatchProvider({ children }) {
         try {
           await addDoc(collection(db, 'matches'), matchData);
           
-          // Show toast notification
-          toast.success(`New match found! You matched with ${otherUser.displayName} (${matchScore.toFixed(0)}% compatibility)`, {
-            duration: 5000,
-            position: 'top-center',
-            className: 'cyber-toast',
-            icon: '🎯'
-          });
+          // Show toast notification using our custom toast system
+          addToast(
+            `New match found! You matched with ${otherUser.displayName} (${matchScore.toFixed(0)}% compatibility)`,
+            'success',
+            5000
+          );
         } catch (error) {
           console.error('Error creating match:', error);
+          addToast('Failed to create match. Please try again.', 'error', 5000);
         }
       }
     });
