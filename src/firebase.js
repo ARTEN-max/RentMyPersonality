@@ -34,6 +34,11 @@ setPersistence(auth, browserLocalPersistence)
     console.error('Error setting auth persistence:', error);
   });
 
+// Add auth state change listener
+auth.onAuthStateChanged((user) => {
+  console.log('Auth state changed:', user ? 'User logged in' : 'User logged out');
+});
+
 // Log the auth configuration for debugging
 console.log("Firebase Auth Configuration:", {
   apiKey: firebaseConfig.apiKey,

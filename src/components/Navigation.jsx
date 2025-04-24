@@ -1,23 +1,25 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
+import { signOut } from 'firebase/auth';
 
 export default function Navigation() {
   const navigate = useNavigate();
-  const { currentUser, logout } = useAuth();
 
   const handleLogout = async () => {
     try {
-      await logout();
-      // Clear any stored auth data
-      localStorage.removeItem('user');
+      // First clear all stored data
+      localStorage.clear();
       sessionStorage.clear();
-      // Force reload to clear any cached auth state
-      window.location.href = '/';
+      
+      // Then sign out from Firebase
+      await signOut(auth);
+      
+      // Force a complete page reload to clear any cached states
+      window.location.replace('/');
     } catch (error) {
       console.error('Failed to log out:', error);
+      alert('Failed to log out. Please try again.');
     }
   };
 
@@ -31,7 +33,7 @@ export default function Navigation() {
                 RentMyPersonality
               </span>
             </Link>
-            {currentUser && (
+            {auth.currentUser && (
               <div className="ml-10 flex items-center space-x-4">
                 <Link
                   to="/browse"
@@ -49,9 +51,9 @@ export default function Navigation() {
             )}
           </div>
           <div className="flex items-center">
-            {currentUser ? (
+            {auth.currentUser ? (
               <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-400">{currentUser.email}</span>
+                <span className="text-sm text-gray-400">{auth.currentUser.email}</span>
                 <button
                   onClick={handleLogout}
                   className="text-gray-300 hover:text-cyan-400 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
