@@ -13,6 +13,17 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-orbitron uppercase tracking-wider text-white;
   }
+
+  select {
+    @apply bg-cyber-dark/50 border border-white/10 rounded-lg px-4 py-2 text-white
+           focus:outline-none focus:ring-2 focus:ring-cyber-neon focus:border-transparent
+           placeholder-gray-500;
+  }
+
+  input[type="checkbox"] {
+    @apply w-4 h-4 text-cyber-neon bg-cyber-dark border-cyber-neon rounded
+           focus:ring-cyber-neon focus:ring-2;
+  }
 }
 
 @layer components {
@@ -44,6 +55,16 @@
 
   .cyber-gradient-text {
     @apply bg-gradient-to-r from-cyber-neon to-cyber-pink text-transparent bg-clip-text;
+  }
+
+  .cyber-select {
+    @apply cyber-input appearance-none bg-no-repeat bg-right pr-10;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2300f6ff'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  }
+
+  .cyber-checkbox {
+    @apply rounded border-cyber-neon text-cyber-neon
+           focus:ring-cyber-neon focus:ring-2 bg-cyber-dark/50;
   }
 
   .cyber-toast {
