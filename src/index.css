@@ -45,6 +45,20 @@
   .cyber-gradient-text {
     @apply bg-gradient-to-r from-cyber-neon to-cyber-pink text-transparent bg-clip-text;
   }
+
+  .cyber-toast {
+    @apply bg-cyber-dark/90 border border-cyber-neon text-white font-rajdhani
+           shadow-lg shadow-cyber-neon/20 backdrop-blur-md
+           animate-slide-up;
+  }
+
+  .cyber-toast-success {
+    @apply border-cyber-neon;
+  }
+
+  .cyber-toast-error {
+    @apply border-cyber-pink;
+  }
 }
 
 /* Animations */
@@ -78,4 +92,59 @@
 /* Focus styles */
 *:focus {
   @apply outline-none ring-2 ring-cyber-neon;
+}
+
+/* Toast Styles */
+.cyber-toast {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 50;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+  cursor: pointer;
+  animation: slideUp 0.3s ease-out;
+  border: 2px solid;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.cyber-toast:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+}
+
+.cyber-toast-success {
+  background: rgba(0, 255, 128, 0.1);
+  border-color: #00ff80;
+  color: #00ff80;
+}
+
+.cyber-toast-error {
+  background: rgba(255, 0, 128, 0.1);
+  border-color: #ff0080;
+  color: #ff0080;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Toast Container */
+.toast-container {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }

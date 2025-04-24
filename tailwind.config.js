@@ -6,35 +6,31 @@ export default {
   ],
   theme: {
     extend: {
-      colors: {
-        'cyber': {
-          dark: '#0f0f1c',
-          darker: '#1a1a2e',
-          neon: '#00f6ff',
-          pink: '#ff4ecd',
-        },
-      },
       fontFamily: {
-        'orbitron': ['Orbitron', 'sans-serif'],
-        'rajdhani': ['Rajdhani', 'sans-serif'],
+        orbitron: ['Orbitron', 'sans-serif'],
+        rajdhani: ['Rajdhani', 'sans-serif'],
+      },
+      colors: {
+        cyber: {
+          darker: '#0a0a0f',
+          dark: '#12121f',
+          neon: '#00ff9f',
+          pink: '#ff00ff',
+          blue: '#00f0ff',
+        },
       },
       animation: {
+        'slide-up': 'slideUp 0.3s ease-out',
         'glow': 'glow 2s ease-in-out infinite alternate',
-        'fade-in': 'fadeIn 0.5s ease-out',
-        'slide-up': 'slideUp 0.5s ease-out',
       },
       keyframes: {
-        glow: {
-          '0%': { 'box-shadow': '0 0 5px #00f6ff, 0 0 10px #00f6ff, 0 0 15px #00f6ff' },
-          '100%': { 'box-shadow': '0 0 10px #00f6ff, 0 0 20px #00f6ff, 0 0 30px #00f6ff' },
-        },
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
-        },
         slideUp: {
-          '0%': { transform: 'translateY(20px)', opacity: '0' },
+          '0%': { transform: 'translateY(100%)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        glow: {
+          '0%': { 'box-shadow': '0 0 5px theme(colors.cyber.neon)' },
+          '100%': { 'box-shadow': '0 0 20px theme(colors.cyber.neon)' },
         },
       },
       backgroundImage: {
