@@ -5,6 +5,8 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
+  setPersistence,
+  browserLocalPersistence
 } from 'firebase/auth';
 
 const AuthContext = createContext();
@@ -17,22 +19,52 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  function signup(email, password) {
-    return createUserWithEmailAndPassword(auth, email, password);
+  async function signup(email, password) {
+    try {
+      await setPersistence(auth, browserLocalPersistence);
+      return createUserWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      console.error('Error in signup:', error);
+      throw error;
+    }
   }
 
-  function login(email, password) {
-    return signInWithEmailAndPassword(auth, email, password);
+  async function login(email, password) {
+    try {
+      await setPersistence(auth, browserLocalPersistence);
+      return signInWithEmailAndPassword(auth, email, password);
+    } catch (error) {
+      console.error('Error in login:', error);
+      throw error;
+    }
   }
 
-  function logout() {
-    return signOut(auth);
+  async function logout() {
+    try {
+      await signOut(auth);
+      localStorage.removeItem('user');
+      sessionStorage.clear();
+    } catch (error) {
+      console.error('Error in logout:', error);
+      throw error;
+    }
   }
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log('Auth state changed:', user?.email);
       setCurrentUser(user);
       setLoading(false);
+      
+      if (user) {
+        // Store minimal user data in localStorage
+        localStorage.setItem('user', JSON.stringify({
+          email: user.email,
+          uid: user.uid
+        }));
+      } else {
+        localStorage.removeItem('user');
+      }
     });
 
     return unsubscribe;
