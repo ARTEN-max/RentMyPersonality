@@ -31,23 +31,26 @@ function Navigation() {
                 <Link to="/browse" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
                   Browse
                 </Link>
-                {currentUser && (
-                  <Link to="/profile" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
-                    Profile
-                  </Link>
-                )}
               </div>
             </div>
           </div>
           <div className="hidden md:block">
-            <div className="ml-4 flex items-center md:ml-6">
+            <div className="ml-4 flex items-center md:ml-6 space-x-4">
               {currentUser ? (
-                <button
-                  onClick={handleLogout}
-                  className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Logout
-                </button>
+                <>
+                  <Link 
+                    to="/profile" 
+                    className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium bg-gray-700 hover:bg-gray-600"
+                  >
+                    Edit Profile
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                  >
+                    Logout
+                  </button>
+                </>
               ) : (
                 <div className="flex space-x-4">
                   <Link to="/login" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
