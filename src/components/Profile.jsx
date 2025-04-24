@@ -25,6 +25,8 @@ function Profile() {
   const [personalityType, setPersonalityType] = useState('');
   const [availability, setAvailability] = useState([]);
   const [instagramHandle, setInstagramHandle] = useState('');
+  const [isAvailableForRent, setIsAvailableForRent] = useState(false);
+  const [hourlyRate, setHourlyRate] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const { currentUser } = useAuth();
@@ -49,6 +51,8 @@ function Profile() {
           setPersonalityType(userData.personalityType || '');
           setAvailability(userData.availability || []);
           setInstagramHandle(userData.instagramHandle || '');
+          setIsAvailableForRent(userData.isAvailableForRent || false);
+          setHourlyRate(userData.hourlyRate?.toString() || '');
         }
       } catch (error) {
         addToast('Failed to load profile data', 'error');
@@ -95,6 +99,8 @@ function Profile() {
         personalityType,
         availability,
         instagramHandle: instagramHandle.trim(),
+        isAvailableForRent,
+        hourlyRate: hourlyRate ? parseFloat(hourlyRate) : 0,
         updatedAt: new Date().toISOString()
       };
 
@@ -190,6 +196,47 @@ function Profile() {
                     </label>
                   ))}
                 </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-cyber-neon mb-2">
+                    Available for Rent
+                  </label>
+                  <div className="flex items-center">
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={isAvailableForRent}
+                        onChange={(e) => setIsAvailableForRent(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-gray-400 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+                      <span className="ml-3 text-sm font-medium text-gray-300">
+                        {isAvailableForRent ? 'Available' : 'Not Available'}
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {isAvailableForRent && (
+                  <div>
+                    <label htmlFor="hourlyRate" className="block text-sm font-medium text-cyber-neon mb-2">
+                      Hourly Rate ($)
+                    </label>
+                    <input
+                      id="hourlyRate"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={hourlyRate}
+                      onChange={(e) => setHourlyRate(e.target.value)}
+                      className="cyber-input w-full"
+                      placeholder="Enter your hourly rate"
+                      required={isAvailableForRent}
+                    />
+                  </div>
+                )}
               </div>
 
               <div>

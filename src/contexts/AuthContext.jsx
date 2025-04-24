@@ -37,7 +37,9 @@ export function AuthProvider({ children }) {
         location: '',
         personalityType: '',
         availability: [],
-        instagramHandle: ''
+        instagramHandle: '',
+        isAvailableForRent: false,
+        hourlyRate: 0
       });
 
       return result;
@@ -89,7 +91,9 @@ export function AuthProvider({ children }) {
             location: '',
             personalityType: '',
             availability: [],
-            instagramHandle: ''
+            instagramHandle: '',
+            isAvailableForRent: false,
+            hourlyRate: 0
           });
         }
 
