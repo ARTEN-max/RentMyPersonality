@@ -1,100 +1,81 @@
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
-@import './styles/hexagon.css';
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   body {
-    @apply bg-gray-900 text-gray-100;
-    background-image: 
-      radial-gradient(circle at 50% -20%, rgba(120, 119, 198, 0.15), transparent 70%),
-      radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.1), transparent 50%),
-      radial-gradient(circle at 10% 60%, rgba(168, 85, 247, 0.1), transparent 50%);
-    min-height: 100vh;
+    @apply bg-cyber-darker text-gray-100 font-rajdhani;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-orbitron uppercase tracking-wider text-white;
   }
 }
 
 @layer components {
   .cyber-button {
-    @apply relative px-6 py-3 rounded-lg text-sm font-bold transition-all duration-300
-           bg-gradient-to-r from-cyan-600 to-purple-600 
-           hover:from-cyan-500 hover:to-purple-500 
-           text-white shadow-lg hover:shadow-cyan-500/25;
+    @apply px-8 py-4 rounded-lg font-bold text-lg uppercase tracking-wider transition-all duration-300
+           hover:shadow-[0_0_10px_#00f6ff] transform hover:scale-105;
   }
 
-  .cyber-button::before {
-    content: '';
-    @apply absolute inset-0 bg-gradient-to-r from-cyan-500 to-purple-500 
-           rounded-lg blur opacity-50 transition-opacity duration-300;
+  .cyber-button-primary {
+    @apply cyber-button bg-gradient-to-r from-cyber-neon to-cyber-pink text-white;
   }
 
-  .cyber-button:hover::before {
-    @apply opacity-75;
-  }
-
-  .cyber-input {
-    @apply w-full px-3 py-2 rounded-lg bg-gray-700/50 
-           border border-cyan-500/20 text-gray-100 
-           focus:ring-2 focus:ring-cyan-500 focus:border-transparent 
-           transition-all duration-300;
+  .cyber-button-secondary {
+    @apply cyber-button bg-white/5 backdrop-blur-md border border-cyber-neon/30 text-cyber-neon
+           hover:bg-white/10 hover:border-cyber-neon;
   }
 
   .cyber-card {
-    @apply relative overflow-hidden;
+    @apply bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-8
+           transition-all duration-300 hover:bg-white/10 hover:border-cyber-neon/30
+           hover:shadow-lg hover:shadow-cyber-neon/10;
   }
 
-  .cyber-card::before {
-    content: '';
-    @apply absolute inset-0 bg-gradient-to-r from-cyan-500 to-purple-500 
-           rounded-lg blur opacity-25 transition-opacity duration-300;
+  .cyber-input {
+    @apply bg-cyber-dark/50 border border-white/10 rounded-lg px-4 py-2 text-white
+           focus:outline-none focus:ring-2 focus:ring-cyber-neon focus:border-transparent
+           placeholder-gray-500;
   }
 
-  .cyber-card:hover::before {
-    @apply opacity-40;
-  }
-
-  .cyber-text-glow {
-    @apply bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent;
-    text-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
+  .cyber-gradient-text {
+    @apply bg-gradient-to-r from-cyber-neon to-cyber-pink text-transparent bg-clip-text;
   }
 }
 
-/* Custom animations */
-@keyframes float {
-  0% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-  100% {
-    transform: translateY(0px);
-  }
+/* Animations */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
 }
 
-.animate-float {
-  animation: float 3s ease-in-out infinite;
+.animate-slide-up {
+  animation: slideUp 0.5s ease-out forwards;
 }
 
-/* Grid animations */
-.grid-container {
-  display: grid;
-  gap: 1.5rem;
-  opacity: 0;
-  transform: translateY(20px);
-  animation: grid-enter 0.5s ease-out forwards;
+/* Glassmorphism */
+.glass {
+  @apply bg-white/5 backdrop-blur-md;
 }
 
-@keyframes grid-enter {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-/* Loading spinner */
-.loading-spinner {
-  @apply w-12 h-12 border-4 border-cyan-500 rounded-full;
-  border-top-color: transparent;
-  animation: cyber-spin 1s linear infinite;
+::-webkit-scrollbar-track {
+  @apply bg-cyber-dark/30 rounded;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-cyber-neon/50 rounded hover:bg-cyber-neon/70;
+}
+
+/* Focus styles */
+*:focus {
+  @apply outline-none ring-2 ring-cyber-neon;
 }
