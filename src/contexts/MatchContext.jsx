@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
 import { useToast } from './ToastContext';
 import { db } from '../firebase';
-import { collection, addDoc, query, where, getDocs, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 
 const MatchContext = createContext();
 
@@ -14,102 +14,129 @@ export function MatchProvider({ children }) {
   const { currentUser } = useAuth();
   const { addToast } = useToast();
   const [matches, setMatches] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // Calculate compatibility score between two users
   const calculateMatchScore = (user1, user2) => {
+    if (!user1 || !user2) return 0;
     let score = 0;
     let totalFactors = 0;
 
-    // Compare personality types (25% weight)
+    // Compare personality types (30% weight)
     if (user1.personalityType && user2.personalityType) {
       totalFactors++;
       if (user1.personalityType === user2.personalityType) {
-        score += 25;
+        score += 30;
+      } else {
+        // Give partial score for similar personality types
+        const similarityScore = getSimilarityScore(user1.personalityType, user2.personalityType);
+        score += similarityScore * 30;
       }
     }
 
-    // Compare availability (35% weight)
-    if (user1.availability && user2.availability) {
+    // Compare availability (30% weight)
+    if (user1.availability?.length && user2.availability?.length) {
       totalFactors++;
       const availabilityOverlap = user1.availability.filter(time => 
         user2.availability.includes(time)
       ).length;
-      score += (availabilityOverlap / Math.max(user1.availability.length, user2.availability.length)) * 35;
+      const maxAvailability = Math.max(user1.availability.length, user2.availability.length);
+      score += (availabilityOverlap / maxAvailability) * 30;
     }
 
-    // Compare bio keywords (40% weight)
-    if (user1.bio && user2.bio) {
+    // Compare interests (40% weight)
+    if (user1.interests?.length && user2.interests?.length) {
       totalFactors++;
-      const bio1Words = user1.bio.toLowerCase().split(' ');
-      const bio2Words = user2.bio.toLowerCase().split(' ');
-      const commonWords = bio1Words.filter(word => bio2Words.includes(word)).length;
-      score += (commonWords / Math.max(bio1Words.length, bio2Words.length)) * 40;
+      const interests1 = Array.isArray(user1.interests) ? user1.interests : [];
+      const interests2 = Array.isArray(user2.interests) ? user2.interests : [];
+      
+      const commonInterests = interests1.filter(interest => 
+        interests2.includes(interest)
+      ).length;
+      
+      const maxInterests = Math.max(interests1.length, interests2.length);
+      score += (commonInterests / maxInterests) * 40;
     }
 
     // Normalize score based on available factors
-    return totalFactors > 0 ? (score / totalFactors) : 0;
+    return totalFactors > 0 ? Math.round((score / totalFactors) * 100) : 0;
+  };
+
+  // Helper function to calculate similarity between personality types
+  const getSimilarityScore = (type1, type2) => {
+    if (type1 === type2) return 1;
+    
+    // Count matching letters in MBTI types
+    const matchingLetters = type1.split('').filter((letter, index) => letter === type2[index]).length;
+    return matchingLetters / 4; // Divide by 4 since MBTI has 4 letters
   };
 
   // Check for matches with other users
   const checkForMatches = async (userData) => {
-    if (!currentUser) return;
+    if (!currentUser || !userData) return;
 
-    const usersRef = collection(db, 'users');
-    const usersSnapshot = await getDocs(usersRef);
-    
-    usersSnapshot.forEach(async (doc) => {
-      const otherUser = doc.data();
-      
-      // Skip if it's the current user or if they've already matched
-      if (doc.id === currentUser.uid || 
-          matches.some(match => match.users.includes(doc.id))) {
-        return;
-      }
+    try {
+      // Get all users except current user
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('email', '!=', currentUser.email));
+      const querySnapshot = await getDocs(q);
 
-      const matchScore = calculateMatchScore(userData, otherUser);
+      const newMatches = [];
+      const matchThreshold = 70; // Match score threshold (70%)
 
-      if (matchScore >= 50) {
-        // Create a new match record
+      querySnapshot.forEach((doc) => {
+        const otherUser = doc.data();
+        const matchScore = calculateMatchScore(userData, otherUser);
+
+        if (matchScore >= matchThreshold) {
+          newMatches.push({
+            id: doc.id,
+            ...otherUser,
+            matchScore
+          });
+
+          // Send match notification
+          addToast(`New match found! You have a ${matchScore}% match with ${otherUser.displayName || 'someone'}`, 'success');
+        }
+      });
+
+      // Update matches in state
+      setMatches(newMatches);
+
+      // Store matches in Firestore
+      const matchesRef = collection(db, 'matches');
+      newMatches.forEach(async (match) => {
         const matchData = {
-          users: [currentUser.uid, doc.id],
-          score: matchScore,
-          timestamp: new Date(),
+          user1Id: currentUser.uid,
+          user2Id: match.id,
+          matchScore: match.matchScore,
+          timestamp: new Date().toISOString(),
           status: 'pending'
         };
 
-        try {
-          await addDoc(collection(db, 'matches'), matchData);
-          
-          // Show toast notification using our custom toast system
-          addToast(
-            `New match found! You matched with ${otherUser.displayName} (${matchScore.toFixed(0)}% compatibility)`,
-            'success',
-            5000
-          );
-        } catch (error) {
-          console.error('Error creating match:', error);
-          addToast('Failed to create match. Please try again.', 'error', 5000);
-        }
-      }
-    });
+        await addDoc(matchesRef, matchData);
+      });
+
+    } catch (error) {
+      console.error('Error checking for matches:', error);
+      addToast('Failed to check for matches', 'error');
+    }
   };
 
-  // Listen for new matches
+  // Listen for user profile updates
   useEffect(() => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      setLoading(false);
+      return;
+    }
 
-    const matchesRef = collection(db, 'matches');
-    const matchesQuery = query(
-      matchesRef,
-      where('users', 'array-contains', currentUser.uid)
-    );
-
-    const unsubscribe = onSnapshot(matchesQuery, (snapshot) => {
-      const newMatches = [];
-      snapshot.forEach((doc) => {
-        newMatches.push({ id: doc.id, ...doc.data() });
-      });
-      setMatches(newMatches);
+    const userRef = doc(db, 'users', currentUser.uid);
+    const unsubscribe = onSnapshot(userRef, (doc) => {
+      if (doc.exists()) {
+        const userData = doc.data();
+        checkForMatches(userData);
+      }
+      setLoading(false);
     });
 
     return () => unsubscribe();
@@ -117,7 +144,7 @@ export function MatchProvider({ children }) {
 
   const value = {
     matches,
-    checkForMatches
+    loading
   };
 
   return (

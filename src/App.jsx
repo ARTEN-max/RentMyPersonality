@@ -3,6 +3,7 @@ import React from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
+import { MatchProvider } from './contexts/MatchContext';
 import Navigation from './components/Navigation';
 import AppRoutes from './components/AppRoutes';
 import ToastContainer from './components/ToastContainer';
@@ -14,12 +15,14 @@ function App() {
     <Router>
       <AuthProvider>
         <ToastProvider>
-          <div className="app">
-            <Navigation />
-            <AppRoutes />
-            <ToastContainer />
-            <AdminTools />
-          </div>
+          <MatchProvider>
+            <div className="app">
+              <Navigation />
+              <AppRoutes />
+              <ToastContainer />
+              <AdminTools />
+            </div>
+          </MatchProvider>
         </ToastProvider>
       </AuthProvider>
     </Router>
