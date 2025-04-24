@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -8,6 +8,7 @@ import {
   setPersistence,
   browserLocalPersistence
 } from 'firebase/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 const AuthContext = createContext();
 
@@ -22,7 +23,24 @@ export function AuthProvider({ children }) {
   async function signup(email, password) {
     try {
       await setPersistence(auth, browserLocalPersistence);
-      return createUserWithEmailAndPassword(auth, email, password);
+      const result = await createUserWithEmailAndPassword(auth, email, password);
+      
+      // Create user document in Firestore
+      const userDocRef = doc(db, 'users', result.user.uid);
+      await setDoc(userDocRef, {
+        email: result.user.email,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        displayName: '',
+        bio: '',
+        interests: '',
+        location: '',
+        personalityType: '',
+        availability: [],
+        instagramHandle: ''
+      });
+
+      return result;
     } catch (error) {
       console.error('Error in signup:', error);
       throw error;
@@ -51,12 +69,30 @@ export function AuthProvider({ children }) {
   }
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       console.log('Auth state changed:', user?.email);
-      setCurrentUser(user);
-      setLoading(false);
       
       if (user) {
+        // Check if user document exists
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+        
+        if (!userDoc.exists()) {
+          // Create user document if it doesn't exist
+          await setDoc(userDocRef, {
+            email: user.email,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            displayName: '',
+            bio: '',
+            interests: '',
+            location: '',
+            personalityType: '',
+            availability: [],
+            instagramHandle: ''
+          });
+        }
+
         // Store minimal user data in localStorage
         localStorage.setItem('user', JSON.stringify({
           email: user.email,
@@ -65,6 +101,9 @@ export function AuthProvider({ children }) {
       } else {
         localStorage.removeItem('user');
       }
+
+      setCurrentUser(user);
+      setLoading(false);
     });
 
     return unsubscribe;

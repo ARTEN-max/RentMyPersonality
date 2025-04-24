@@ -24,7 +24,9 @@ function Profile() {
   const [location, setLocation] = useState('');
   const [personalityType, setPersonalityType] = useState('');
   const [availability, setAvailability] = useState([]);
+  const [instagramHandle, setInstagramHandle] = useState('');
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const { currentUser } = useAuth();
   const { addToast } = useToast();
   const navigate = useNavigate();
@@ -42,10 +44,11 @@ function Profile() {
           const userData = userDoc.data();
           setDisplayName(userData.displayName || '');
           setBio(userData.bio || '');
-          setInterests(userData.interests || '');
+          setInterests(Array.isArray(userData.interests) ? userData.interests.join(', ') : userData.interests || '');
           setLocation(userData.location || '');
           setPersonalityType(userData.personalityType || '');
           setAvailability(userData.availability || []);
+          setInstagramHandle(userData.instagramHandle || '');
         }
       } catch (error) {
         addToast('Failed to load profile data', 'error');
@@ -61,18 +64,37 @@ function Profile() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!currentUser) return;
+    if (!currentUser) {
+      addToast('Please log in to update your profile', 'error');
+      navigate('/login');
+      return;
+    }
+
+    if (!displayName.trim()) {
+      addToast('Display name is required', 'error');
+      return;
+    }
+
+    if (!personalityType) {
+      addToast('Please select your personality type', 'error');
+      return;
+    }
 
     try {
-      setLoading(true);
+      setSaving(true);
+      const interestsArray = interests
+        .split(',')
+        .map(interest => interest.trim())
+        .filter(interest => interest.length > 0);
 
       const userData = {
-        displayName,
-        bio,
-        interests,
-        location,
+        displayName: displayName.trim(),
+        bio: bio.trim(),
+        interests: interestsArray,
+        location: location.trim(),
         personalityType,
         availability,
+        instagramHandle: instagramHandle.trim(),
         updatedAt: new Date().toISOString()
       };
 
@@ -82,7 +104,7 @@ function Profile() {
       addToast('Failed to update profile', 'error');
       console.error('Error updating profile:', error);
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -97,7 +119,7 @@ function Profile() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-cyber-darker">
-        <div className="text-cyber-neon">Loading...</div>
+        <div className="text-cyber-neon animate-pulse">Loading...</div>
       </div>
     );
   }
@@ -119,7 +141,7 @@ function Profile() {
             <div className="space-y-4">
               <div>
                 <label htmlFor="display-name" className="block text-sm font-medium text-cyber-neon">
-                  Display Name
+                  Display Name *
                 </label>
                 <input
                   id="display-name"
@@ -129,12 +151,13 @@ function Profile() {
                   placeholder="How should we call you?"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
+                  maxLength={50}
                 />
               </div>
 
               <div>
                 <label htmlFor="personality-type" className="block text-sm font-medium text-cyber-neon">
-                  Personality Type
+                  Personality Type *
                 </label>
                 <select
                   id="personality-type"
@@ -180,7 +203,28 @@ function Profile() {
                   placeholder="Where are you based?"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
+                  maxLength={100}
                 />
+              </div>
+
+              <div>
+                <label htmlFor="instagram" className="block text-sm font-medium text-cyber-neon">
+                  Instagram Handle
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                    @
+                  </span>
+                  <input
+                    id="instagram"
+                    type="text"
+                    className="cyber-input w-full pl-8"
+                    placeholder="your.instagram.handle"
+                    value={instagramHandle}
+                    onChange={(e) => setInstagramHandle(e.target.value.replace('@', ''))}
+                    maxLength={30}
+                  />
+                </div>
               </div>
 
               <div>
@@ -194,7 +238,11 @@ function Profile() {
                   placeholder="What are your interests? (comma separated)"
                   value={interests}
                   onChange={(e) => setInterests(e.target.value)}
+                  maxLength={200}
                 />
+                <p className="mt-1 text-sm text-gray-400">
+                  Separate multiple interests with commas
+                </p>
               </div>
 
               <div>
@@ -203,22 +251,23 @@ function Profile() {
                 </label>
                 <textarea
                   id="bio"
-                  rows="4"
+                  rows={4}
                   className="cyber-input w-full"
-                  placeholder="Tell others about yourself..."
+                  placeholder="Tell us about yourself..."
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
+                  maxLength={500}
                 />
               </div>
             </div>
 
-            <div className="flex justify-end">
+            <div>
               <button
                 type="submit"
-                disabled={loading}
-                className="cyber-button-primary"
+                disabled={saving}
+                className={`w-full cyber-button ${saving ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                {loading ? 'Saving...' : 'Save Changes'}
+                {saving ? 'Saving...' : 'Save Profile'}
               </button>
             </div>
           </form>
