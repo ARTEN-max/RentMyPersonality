@@ -4,13 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { db } from '../firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-
-const PERSONALITY_TYPES = [
-  'INTJ', 'INTP', 'ENTJ', 'ENTP',
-  'INFJ', 'INFP', 'ENFJ', 'ENFP',
-  'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ',
-  'ISTP', 'ISFP', 'ESTP', 'ESFP'
-];
+import { PERSONALITY_TYPES } from '../types/user';
 
 const AVAILABILITY_SLOTS = [
   'Morning', 'Afternoon', 'Evening', 'Night',
@@ -172,10 +166,15 @@ function Profile() {
                   onChange={(e) => setPersonalityType(e.target.value)}
                   required
                 >
-                  <option value="">Select your MBTI type</option>
-                  {PERSONALITY_TYPES.map(type => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
+                  <option value="">Select your personality type</option>
+                  <option value="ANALYTICAL">ANALYTICAL - Logical, strategic, and intellectually curious</option>
+                  <option value="CREATIVE">CREATIVE - Imaginative, artistic, and innovative</option>
+                  <option value="LEADER">LEADER - Decisive, organized, and goal-oriented</option>
+                  <option value="COUNSELOR">COUNSELOR - Empathetic, insightful, and supportive</option>
+                  <option value="MEDIATOR">MEDIATOR - Harmonious, idealistic, and diplomatic</option>
+                  <option value="ENTERTAINER">ENTERTAINER - Spontaneous, energetic, and outgoing</option>
+                  <option value="SUPPORTIVE">SUPPORTIVE - Reliable, nurturing, and service-oriented</option>
+                  <option value="ADVENTUROUS">ADVENTUROUS - Action-oriented, adaptable, and resourceful</option>
                 </select>
               </div>
 
