@@ -1,12 +1,23 @@
-# React + Vite
+# 🧠 RentMyPersonality
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**RentMyPersonality** is a unique platform that lets users rent *personalities* — not people. Whether you're looking for a witty debate partner, a motivational coach, a sarcastic sidekick, or a calming conversationalist, RentMyPersonality lets you connect with AI or real users curated by vibe.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🎯 What It Does
 
-## Expanding the ESLint configuration
+- 🎭 **Browse Personalities** – Pick from a curated list of personas across moods, genres, and goals
+- 💬 **Chat or Call** – Interact with personalities via text or voice (real or AI-powered)
+- 🌐 **Booking System** – Schedule time slots or instant access
+- 🧩 **Customizable Profiles** – Create your own personality for others to rent
+- 💸 **Optional Monetization** – Earn tokens or payments (if enabled)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## 🚀 Getting Started
+
+### 1. Clone the Project
+
+```bash
+git clone https://github.com/yourusername/rentmypersonality.git
+cd rentmypersonality
